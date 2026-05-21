@@ -543,15 +543,23 @@ function saveData(){
     dailyPay: isOff ? "฿0.00" : (isHalf ? "฿200.00" : "฿" + (400 + ot * 50).toFixed(2))
   };
 
-  google.script.run.withSuccessHandler(m=>{
-    btn.disabled = false; 
-    btn.innerText = "ADD RECORD";
-    showToast("သိမ်းဆည်းပြီးပါပြီ ခင်ဗျာ။");
-    document.getElementById("monthView").value = m;
-    loadData();
-  }).addKYOESARTHU(data);
-}   
+  let allData =
+    JSON.parse(localStorage.getItem("kyoeData")) || [];
 
+  allData.unshift(data);
+
+  localStorage.setItem(
+    "kyoeData",
+    JSON.stringify(allData)
+  );
+
+  btn.disabled = false;
+  btn.innerText = "ADD RECORD";
+
+  showToast("သိမ်းဆည်းပြီးပါပြီ");
+
+  loadData();
+}
   
 
 function del(i){
