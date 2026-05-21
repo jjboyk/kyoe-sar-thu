@@ -388,7 +388,9 @@ function renderTable() {
   tbody.innerHTML = "";
 
   let start = currentPage * 14;
-  let page = currentMonthData.slice(start, start + 14);
+  let page = currentMonthData.sort((a,b)=>
+  new Date (a.date[0] - new Date (b.date[0] );
+  let page = currentMonthData.slice(start, start+ 14);
  
 // ✅ မျဉ်းနီတားထားတဲ့နေရာမှာ ရက်စွဲပြရန် တွက်ချက်ခြင်း
   if (page.length > 0) {
@@ -633,8 +635,10 @@ function saveData(){
     ]
   };
 
-  arr.unshift(newItem);
-
+  arr.push(newItem);
+arr.sort((a,b)=>
+  new Date (a.date[0] - new Date (b.date[0] );
+  
   localStorage.setItem(
     getStorageKey(month),
     JSON.stringify(arr)
