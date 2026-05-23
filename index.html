@@ -120,18 +120,7 @@ tr:hover{
   left:0;
   width:100%;
   height:100%;
-
-  background:rgba(11,19,43,.55);
-
-  backdrop-filter:blur(2px);
-
-  z-index:50;
-
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
+  
 .lock-icon{
   font-size:60px;
   color:rgba(255,77,109,.45);
@@ -296,7 +285,6 @@ ADD RECORD
 </div>
 
 <div class="table-container border border-gray-800"
-style="position:relative;"
 ondblclick="handleTableDoubleClick()">
   <table class="w-full text-center text-[12px]">
     <thead class="bg-[#0b132b] text-gray-400">
@@ -392,7 +380,7 @@ function calculate(){
   resTotal.innerText = "฿" + (400 + ot * 50).toFixed(2);
 }
 
-function loadData(keepPage = false){
+async function loadData(keepPage = false){
 
   let oldPage = currentPage;
 
@@ -401,15 +389,57 @@ function loadData(keepPage = false){
     "monthView"
   ).value;
 
-  let saved =
-  localStorage.getItem(
-    getStorageKey(month)
-  );
+  const { data, error } =
+  await supabase
+    .from("salary_data")
+    .select("*")
+    .order("data", {
+      ascending:true
+    });
+
+  if(error){
+
+    console.log(error);
+
+    showToast(
+      "Load Error",
+      "error"
+    );
+
+    return;
+  }
 
   currentMonthData =
-  saved
-  ? JSON.parse(saved)
-  : [];
+  data
+  .filter(item => {
+
+    let itemMonth =
+    new Date(item.data)
+    .toLocaleString(
+      "en-US",
+      { month:"long" }
+    )
+    .toUpperCase();
+
+    return itemMonth === month;
+  })
+  .map(item => {
+
+    return {
+
+      rowIndex: item.id,
+
+      data:[
+        item.data,
+        item.start_time,
+        item.end_time,
+        item.work_hours,
+        item.ot_hours,
+        item.ot_pay,
+        item.daily_pay
+      ]
+    };
+  });
 
   if(keepPage){
     currentPage = oldPage;
