@@ -390,7 +390,7 @@ async function loadData(keepPage = false){
   ).value;
 
   const { data, error } =
-  await supabase
+  await supabaseClient
     .from("salary_data")
     .select("*")
     .order("data", {
