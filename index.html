@@ -718,101 +718,86 @@ async function saveData(){
 }
   
 
-function del(i){
+async function del(i){
 
-  if(confirm("Delete?")){
+if(confirm("Delete?")){
 
-    let month =
-    document.getElementById(
-      "monthView"
-    ).value;
+const { error } =
+await supabaseClient
+  .from("salary_data")
+  .delete()
+  .eq("id", i);
 
-    let saved =
-    localStorage.getItem(
-      getStorageKey(month)
-    );
+if(error){
 
-    let arr =
-    saved
-    ? JSON.parse(saved)
-    : [];
-
-    arr =
-    arr.filter(
-      x =>
-      x.rowIndex !== i
-    );
-
-    localStorage.setItem(
-
-      getStorageKey(month),
-
-      JSON.stringify(arr)
-    );
-
-    loadData();
-  }
-}
-
-function updateCell(
-
-  rowIndex,
-
-  colIndex,
-
-  newValue
-
-){
-
-  let month =
-  document.getElementById(
-    "monthView"
-  ).value;
-
-  let saved =
-  localStorage.getItem(
-    getStorageKey(month)
-  );
-
-  let arr =
-  saved
-  ? JSON.parse(saved)
-  : [];
-
-  arr.forEach(item=>{
-
-    if(
-      item.rowIndex === rowIndex
-    ){
-
-      item.data[colIndex] =
-      newValue;
-
-      let ot =
-      parseFloat(
-        item.data[4]
-      ) || 0;
-
-      item.data[6] =
-      "฿" +
-      (
-        400 + ot * 50
-      ).toFixed(2);
-    }
-  });
-
-  localStorage.setItem(
-
-    getStorageKey(month),
-
-    JSON.stringify(arr)
-  );
-
-  loadData(true);
+  console.log(error);
 
   showToast(
-    "ပြင်ပြီးပါပြီ"
+    "Delete Error",
+    "error"
   );
+
+  return;
+}
+
+loadData();
+
+}
+}
+async function updateCell(
+rowIndex,
+colIndex,
+newValue
+){
+
+let columnMap = {
+0: "data",
+4: "ot_hours"
+};
+
+let updateData = {};
+
+updateData[
+columnMap[colIndex]
+] = newValue;
+
+// OT ပြောင်းရင် daily pay ပြန်တွက်
+if(colIndex == 4){
+
+let ot = parseFloat(newValue) || 0;
+
+updateData.daily_pay =
+  "฿" + (400 + ot * 50).toFixed(2);
+
+updateData.ot_pay =
+  "฿" + (ot * 50).toFixed(2);
+
+}
+
+const { error } =
+await supabaseClient
+.from("salary_data")
+.update(updateData)
+.eq("id", rowIndex);
+
+if(error){
+
+console.log(error);
+
+showToast(
+  "Update Error",
+  "error"
+);
+
+return;
+
+}
+
+loadData(true);
+
+showToast(
+"ပြင်ပြီးပါပြီ"
+);
 }
 
 function showToast(
