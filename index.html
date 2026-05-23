@@ -95,6 +95,8 @@ button:active{
   overflow-y:auto;
   border-radius:15px;
   background:#1c2541;
+
+  position:relative;
 }
 
 tr:hover{
@@ -103,9 +105,12 @@ tr:hover{
 
 .lock-overlay{
   position:absolute;
-  inset:0;
-  background:
-  rgba(11,19,43,.55);
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+
+  background:rgba(11,19,43,.55);
 
   backdrop-filter:blur(2px);
 
@@ -118,9 +123,14 @@ tr:hover{
 
 .lock-icon{
   font-size:60px;
-  color:
-  rgba(255,77,109,.45);
+  color:rgba(255,77,109,.45);
+
+  position:sticky;
+  top:50%;
+
+  transform:translateY(-50%);
 }
+
 
 .toast{
   position:fixed;
@@ -543,7 +553,7 @@ function changePage(step){
 }
 
 
-function saveData(){
+async function saveData(){
 
   const btn = document.getElementById("addBtn");
 
@@ -588,31 +598,14 @@ function saveData(){
       : 400 + ot * 50
     );
 
-  let month =
-  new Date(dateValue)
-  .toLocaleString(
-    'en-US',
-    {month:'long'}
-  )
-  .toUpperCase();
-
-  let saved =
-  localStorage.getItem(
-    getStorageKey(month)
-  );
-
-  let arr =
-  saved
-  ? JSON.parse(saved)
-  : [];
-
   // duplicate check
-  let alreadyExists =
-  arr.some(
-    x => x.data[0] === dateValue
-  );
+  const { data: oldData } =
+  await supabase
+    .from("salary_data")
+    .select("*")
+    .eq("data", dateValue);
 
-  if(alreadyExists){
+  if(oldData.length > 0){
 
     showToast(
       "ဒီရက်စွဲရှိပြီးသား",
@@ -625,15 +618,18 @@ function saveData(){
     return;
   }
 
-  let newItem = {
+  const { error } =
+  await supabase
+    .from("salary_data")
+    .insert([{
 
-    rowIndex: Date.now(),
+      data: dateValue,
 
-    data:[
-      dateValue,
-      startVal,
-      endVal,
+      start_time: startVal,
 
+      end_time: endVal,
+
+      work_hours:
       isOff
       ? 0
       : (
@@ -642,36 +638,37 @@ function saveData(){
           : hrs
         ),
 
+      ot_hours:
       isOff || isHalf
       ? 0
       : ot,
 
+      ot_pay:
       "฿" +
       (ot * 50).toFixed(2),
 
+      daily_pay:
       "฿" +
       dailyPay.toFixed(2)
-    ]
-  };
 
-  arr.push(newItem);
-arr.sort((a, b) =>
-  new Date(a.data[0]) - new Date(b.data[0])
-);
-  
-  localStorage.setItem(
-    getStorageKey(month),
-    JSON.stringify(arr)
-  );
+    }]);
 
   btn.disabled = false;
   btn.innerText = "ADD RECORD";
 
-  showToast("သိမ်းဆည်းပြီးပါပြီ");
+  if(error){
 
-  document.getElementById(
-    "monthView"
-  ).value = month;
+    showToast(
+      "Save မအောင်မြင်",
+      "error"
+    );
+
+    console.log(error);
+
+    return;
+  }
+
+  showToast("သိမ်းဆည်းပြီးပါပြီ");
 
   loadData();
 }
